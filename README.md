@@ -1,3 +1,5 @@
+https://film-finder-vue-js.vercel.app/
+
 Final Project Assignment: Vue Mega App
 (Full Course Coverage)
 Create a full Vue project that demonstrates your understanding of all topics covered in the
