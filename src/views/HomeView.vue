@@ -1,5 +1,48 @@
 <template>
   <div class="page-container">
+    <div class="auth-buttons" style="display: flex; gap: 1rem">
+      <!-- Войти / редирект на /login -->
+      <button
+        v-if="!user"
+        @click="goLogin"
+        style="
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          font-weight: bold;
+          background-color: #ff6b6b;
+          color: #fff;
+          transition: background-color 0.3s ease;
+        "
+        @mouseover="hover = true"
+        @mouseleave="hover = false"
+        :style="{ backgroundColor: hover ? '#ff4b4b' : '#ff6b6b' }"
+      >
+        Войти
+      </button>
+
+      <!-- Выйти -->
+      <button
+        v-else
+        @click="logout"
+        style="
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          font-weight: bold;
+          background-color: #555;
+          color: #fff;
+          transition: background-color 0.3s ease;
+        "
+        @mouseover="hoverLogout = true"
+        @mouseleave="hoverLogout = false"
+        :style="{ backgroundColor: hoverLogout ? '#777' : '#555' }"
+      >
+        Выйти ({{ user.email }})
+      </button>
+    </div>
     <!-- Центрированный блок поиска -->
     <div class="center-content">
       <h2>Информацию о каком фильме ты хочешь найти?</h2>
@@ -30,11 +73,11 @@
     <MovieGrid :movies="movies" @select="openMovie" />
   </div>
 </template>
-
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useMovies } from "@/composables/useMovies";
+import { useAuth } from "@/composables/useAuth";
 
 import SearchBar from "@/components/SearchBar.vue";
 import MovieGrid from "@/components/MovieGrid.vue";
@@ -47,8 +90,17 @@ const stats = reactive({ searches: 0 });
 const isSidebarOpen = ref(false);
 const searchHistory = ref([]);
 
+// Movies composable
 const { movies, loading, error, search } = useMovies("6c29f279");
 
+// Auth composable
+const { user, login, logout } = useAuth();
+
+// Hover состояния для кнопок (если используешь inline hover)
+const hoverLogin = ref(false);
+const hoverLogout = ref(false);
+
+// Методы поиска фильмов
 function searchMovies() {
   if (query.value.trim() === "") return;
 
@@ -73,6 +125,16 @@ function selectFromHistory(item) {
   query.value = item;
   searchMovies();
   isSidebarOpen.value = false;
+}
+
+// Quick login (только для dev)
+function quickLogin() {
+  login("test@test.com", "123456");
+}
+
+// Переход на страницу логина
+function goLogin() {
+  router.push("/login");
 }
 </script>
 

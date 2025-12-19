@@ -14,6 +14,10 @@ const routes = [
     component: () => import("@/views/MovieDetailView.vue"),
   },
   {
+    path: "/login",
+    component: () => import("@/views/Login.vue"),
+  },
+  {
     path: "/:pathMatch(.*)*",
     component: () => import("@/views/NotFoundView.vue"),
   },

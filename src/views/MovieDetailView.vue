@@ -18,12 +18,15 @@
       <p>{{ movie.Plot }}</p>
     </div>
 
-    <!-- Форма комментариев -->
-    <div class="comment-form">
+    <!-- Комментарии -->
+    <div v-if="user" class="comment-form">
       <h2>Оставить комментарий</h2>
+
+      <p class="user-info">
+        Вы вошли как <strong>{{ user.email }}</strong>
+      </p>
+
       <form @submit.prevent="submit">
-        <input v-model="name" placeholder="Имя" />
-        <input v-model="email" placeholder="Email" />
         <textarea v-model="text" placeholder="Комментарий"></textarea>
 
         <p v-if="error" class="error">{{ error }}</p>
@@ -31,30 +34,33 @@
         <button type="submit">Отправить</button>
       </form>
 
-      <!-- Список комментариев -->
       <div v-if="comments.length" class="comments-list">
         <h3>Комментарии:</h3>
         <div v-for="(c, index) in comments" :key="index" class="comment-item">
           <p>
-            <strong>{{ c.name }}</strong> (<em>{{ c.email }}</em
-            >)
+            <strong>{{ c.name }}</strong>
+            <em>({{ c.email }})</em>
           </p>
           <p>{{ c.text }}</p>
         </div>
       </div>
     </div>
+
+    <p v-else class="login-hint">Войдите чтоб оставить коммент</p>
   </div>
 
   <div v-else class="loading">Загрузка...</div>
 </template>
-
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
 
+const { user } = useAuth();
 const route = useRoute();
 const movie = ref(null);
 
+// Загружаем фильм
 onMounted(async () => {
   const res = await fetch(
     `https://www.omdbapi.com/?i=${route.params.id}&apikey=6c29f279`
@@ -62,46 +68,39 @@ onMounted(async () => {
   movie.value = await res.json();
 });
 
-// Форма комментариев
-const name = ref("");
-const email = ref("");
+// Комментарии
 const text = ref("");
 const error = ref("");
 const comments = ref([]);
 
-// Ключ для localStorage
 const storageKey = `comments-${route.params.id}`;
 
-// Загружаем комментарии из localStorage
 onMounted(() => {
   const saved = localStorage.getItem(storageKey);
   if (saved) comments.value = JSON.parse(saved);
 });
 
-// Сохраняем комментарии в localStorage при изменении
 watch(
   comments,
-  (newComments) => {
-    localStorage.setItem(storageKey, JSON.stringify(newComments));
+  (val) => {
+    localStorage.setItem(storageKey, JSON.stringify(val));
   },
   { deep: true }
 );
 
 function submit() {
-  if (!name.value || !email.value || text.value.length < 5) {
-    error.value = "Заполните все поля корректно";
+  if (!text.value || text.value.length < 5) {
+    error.value = "Комментарий слишком короткий";
     return;
   }
 
-  error.value = "";
   comments.value.push({
-    name: name.value,
-    email: email.value,
+    name: user.value.email.split("@")[0],
+    email: user.value.email,
     text: text.value,
   });
 
-  name.value = "";
-  email.value = "";
+  error.value = "";
   text.value = "";
 }
 </script>
